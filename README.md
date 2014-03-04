@@ -36,6 +36,7 @@ Include the jQuery library (version 1.7 or newer) and Backstretch plugin files i
 | `centeredY` | This parameter controls whether or not we center the image on the Y axis to account for the aforementioned discrepancy. | Boolean | true |
 | `fade` | This is the speed at which the image will fade in. Integers in milliseconds are accepted, as well as standard jQuery speed strings (slow, normal, fast). | Integer or String | 0 |
 | `duration` | The amount of time in between slides, when using Backstretch as a slideshow, expressed as the number of milliseconds. | Integer | 5000 |
+| `crop` | Whether the image should be cropped to completely fill the window.  If the value is "smart" then only minor corpping occurs. | Boolean or "Smart" | true |
 
 ## Slideshow API
 

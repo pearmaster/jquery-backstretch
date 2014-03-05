@@ -1,7 +1,6 @@
-/*! Backstretch - v2.0.4 - 2013-06-19
+/*! Backstretch - v2.0.3 - 2014-03-05
 * http://srobbin.com/jquery-plugins/backstretch/
-* Copyright (c) 2013 Scott Robbin; Licensed MIT */
-
+* Copyright (c) 2014 Scott Robbin; Licensed MIT */
 ;(function ($, window, undefined) {
   'use strict';
 
@@ -71,10 +70,11 @@
     , centeredY: true   // Should we center the image on the Y axis?
     , duration: 5000    // Amount of time in between slides (if slideshow)
     , fade: 0           // Speed of fade transition between slides
+    , crop: true        // Should we crop the image to fit the container?
   };
 
   /* STYLES
-   * 
+   *
    * Baked-in styles that we'll apply to our elements.
    * In an effort to keep the plugin simple, these are not exposed as options.
    * That said, anyone can override these in their own stylesheet.
@@ -118,7 +118,7 @@
     // Preload images
     $.each(this.images, function () {
       $('<img />')[0].src = this;
-    });    
+    });
 
     // Convenience reference to know if the container is body.
     this.isBody = container === document.body;
@@ -148,7 +148,7 @@
         , zIndex: zIndex === 'auto' ? 0 : zIndex
         , background: 'none'
       });
-      
+
       // Needs a higher z-index
       this.$wrap.css({zIndex: -999998});
     }
@@ -180,26 +180,56 @@
         try {
           var bgCSS = {left: 0, top: 0}
             , rootWidth = this.isBody ? this.$root.width() : this.$root.innerWidth()
-            , bgWidth = rootWidth
             , rootHeight = this.isBody ? ( window.innerHeight ? window.innerHeight : this.$root.height() ) : this.$root.innerHeight()
-            , bgHeight = bgWidth / this.$img.data('ratio')
-            , bgOffset;
+            , bgOffset
+            , bgWidth
+            , bgHeight
+            , rootRatio = rootWidth / rootHeight
+            , doCrop = (this.options.crop && true);
 
-            // Make adjustments based on image ratio
-            if (bgHeight >= rootHeight) {
+            if (this.options.crop == "smart") {
+              if (rootRatio - this.$img.data('ratio') < .4) {
+                doCrop = true;
+              } else {
+                doCrop = false;
+              }
+            }
+
+            if (doCrop) {
+              bgWidth = rootWidth;
+              bgHeight = bgWidth / this.$img.data('ratio');
+
+              // Make adjustments based on image ratio
+              if (bgHeight >= rootHeight) {
                 bgOffset = (bgHeight - rootHeight) / 2;
                 if(this.options.centeredY) {
                   bgCSS.top = '-' + bgOffset + 'px';
                 }
-            } else {
+              } else {
                 bgHeight = rootHeight;
                 bgWidth = bgHeight * this.$img.data('ratio');
                 bgOffset = (bgWidth - rootWidth) / 2;
                 if(this.options.centeredX) {
                   bgCSS.left = '-' + bgOffset + 'px';
                 }
+              }
+            } else {
+              if (rootRatio > this.$img.data('ratio')) {
+                bgHeight = rootHeight;
+                bgWidth = bgHeight * this.$img.data('ratio');
+                bgOffset = (bgWidth - rootWidth) / 2;
+                if(this.options.centeredX) {
+                  bgCSS.left = (-1*bgOffset) + 'px';
+                }
+              } else {
+                bgWidth = rootWidth;
+                bgHeight = bgWidth / this.$img.data('ratio');
+                bgOffset = (bgHeight - rootHeight) / 2;
+                if(this.options.centeredY) {
+                  bgCSS.top = (-1*bgOffset) + 'px';
+                }
+              }
             }
-
             this.$wrap.css({width: rootWidth, height: rootHeight})
                       .find('img:not(.deleteable)').css({width: bgWidth, height: bgHeight}).css(bgCSS);
         } catch(err) {
@@ -224,7 +254,7 @@
           , evtOptions = { relatedTarget: self.$container[0] };
 
         // Trigger the "before" event
-        self.$container.trigger($.Event('backstretch.before', evtOptions), [self, newIndex]); 
+        self.$container.trigger($.Event('backstretch.before', evtOptions), [self, newIndex]);
 
         // Set the new index
         this.index = newIndex;
@@ -238,7 +268,7 @@
                       .bind('load', function (e) {
                         var imgWidth = this.width || $(e.target).width()
                           , imgHeight = this.height || $(e.target).height();
-                        
+
                         // Save the ratio
                         $(this).data('ratio', imgWidth / imgHeight);
 
@@ -317,7 +347,7 @@
 
         // Remove Backstretch
         if(!preserveBackground) {
-          this.$wrap.remove();          
+          this.$wrap.remove();
         }
         this.$container.removeData('backstretch');
       }
@@ -352,23 +382,23 @@
     return !(
       // iOS 4.3 and older : Platform is iPhone/Pad/Touch and Webkit version is less than 534 (ios5)
       ((platform.indexOf( "iPhone" ) > -1 || platform.indexOf( "iPad" ) > -1  || platform.indexOf( "iPod" ) > -1 ) && wkversion && wkversion < 534) ||
-      
+
       // Opera Mini
       (window.operamini && ({}).toString.call( window.operamini ) === "[object OperaMini]") ||
       (operammobilematch && omversion < 7458) ||
-      
+
       //Android lte 2.1: Platform is Android and Webkit version is less than 533 (Android 2.2)
       (ua.indexOf( "Android" ) > -1 && wkversion && wkversion < 533) ||
-      
+
       // Firefox Mobile before 6.0 -
       (ffversion && ffversion < 6) ||
-      
+
       // WebOS less than 3
       ("palmGetResource" in window && wkversion && wkversion < 534) ||
-      
+
       // MeeGo
       (ua.indexOf( "MeeGo" ) > -1 && ua.indexOf( "NokiaBrowser/8.5.0" ) > -1) ||
-      
+
       // IE6
       (ieversion && ieversion <= 6)
     );
